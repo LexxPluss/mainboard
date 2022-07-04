@@ -56,4 +56,4 @@ private:
 
 }
 
-// vim: set expandtab shiftwidth=4:
+

@@ -369,4 +369,4 @@ k_msgq msgq;
 
 }
 
-// vim: set expandtab shiftwidth=4:
+

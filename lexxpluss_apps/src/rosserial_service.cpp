@@ -61,4 +61,4 @@ k_thread thread;
 
 }
 
-// vim: set expandtab shiftwidth=4:
+
