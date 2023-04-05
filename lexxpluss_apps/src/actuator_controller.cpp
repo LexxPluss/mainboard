@@ -304,7 +304,7 @@ private:
     float control_i{0.0f};
     int32_t target_position{0}, vel_max{20}, vel_min{10};
     bool activated{false};
-    static constexpr float POS_P{1.0f}, VEL_P{0.0f}, VEL_I{0.13f};
+    static constexpr float POS_P{1.0f}, VEL_P{0.13f}, VEL_I{0.13f};
 };
 
 class actuator {
