@@ -272,8 +272,8 @@ public:
             control_i = std::clamp(control_i, -1.0f, 1.0f);
             control = control_p + control_i;
             control = std::clamp(control, -1.0f, 1.0f);
-            control *= 0.3f;
-            control += direction == msg_control::UP ? 0.7f : -0.7f;
+            control *= 0.5f;
+            control += direction == msg_control::UP ? 0.5f : -0.5f;
         }
         return {activated, direction, control};
     }
