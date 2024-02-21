@@ -39,6 +39,7 @@
 #include "runaway_detector.hpp"
 #include "tof_controller.hpp"
 #include "uss_controller.hpp"
+#include "towing_unit_controller.hpp"
 
 namespace {
 
@@ -56,6 +57,7 @@ K_THREAD_STACK_DEFINE(rosserial_service_stack, 2048);
 K_THREAD_STACK_DEFINE(runaway_detector_stack, 2048);
 K_THREAD_STACK_DEFINE(tof_controller_stack, 2048);
 K_THREAD_STACK_DEFINE(uss_controller_stack, 2048);
+K_THREAD_STACK_DEFINE(towing_unit_controller_stack, 2048);
 
 #define RUN(name, prio) \
     k_thread_create(&lexxhard::name::thread, name##_stack, K_THREAD_STACK_SIZEOF(name##_stack), \
@@ -70,6 +72,25 @@ void reset_usb_hub()
         k_msleep(1);
         gpio_pin_set(gpioj, 13, 1);
     }
+}
+
+uint8_t get_board_setting()
+{
+    uint8_t brd_setting{0}, temp{0};
+
+    const device *gpiof{device_get_binding("GPIOF")};
+
+    if (device_is_ready(gpiof)) {
+        gpio_pin_configure(gpiof, 12, GPIO_INPUT | GPIO_PULL_UP | GPIO_ACTIVE_HIGH);   //SPRGPI09
+        gpio_pin_configure(gpiof, 13, GPIO_INPUT | GPIO_PULL_UP | GPIO_ACTIVE_HIGH);   //SPRGPI10
+
+        brd_setting = uint8_t(gpio_pin_get(gpiof, 12));
+        temp = uint8_t(gpio_pin_get(gpiof, 13));
+        temp = temp << 1;
+        brd_setting = brd_setting | temp;
+    }
+
+    return brd_setting;
 }
 
 }
@@ -91,6 +112,7 @@ void main()
     lexxhard::runaway_detector::init();
     lexxhard::tof_controller::init();
     lexxhard::uss_controller::init();
+    
     RUN(actuator_controller, 2);
     RUN(adc_reader, 2);
     RUN(can_controller, 4);
@@ -103,6 +125,20 @@ void main()
     RUN(tof_controller, 2);
     RUN(uss_controller, 2);
     RUN(runaway_detector, 4);
+
+    switch (get_board_setting()) {
+        case 0: //Wani Unit
+            lexxhard::towing_unit_controller::init();
+            RUN(towing_unit_controller, 2);
+            break;
+        case 1: //Reserved
+            break;
+        case 2: //Reserved
+            break;
+        default:
+            break;
+    }
+
     RUN(rosserial, 5); // The rosserial thread will be started last.
     RUN(rosserial_service, 6); // The rosserial thread will be started last.
     const device *gpiog{device_get_binding("GPIOG")};
