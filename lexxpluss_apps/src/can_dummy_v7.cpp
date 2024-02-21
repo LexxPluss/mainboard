@@ -46,6 +46,92 @@ void send_can_data(const device *dev, uint32_t id, const uint8_t *data, uint8_t 
     can_send(dev, &frame, K_MSEC(100), nullptr, nullptr);
 }
 
+void send_bmu(const device *dev)
+{
+    uint8_t buf[8];
+    buf[0] = 0;
+    buf[1] = 0;
+    buf[2] = 81;
+    buf[3] = 81;
+    buf[4] = 100;
+    buf[5] = (2567 >> 8) & 0xff;
+    buf[6] = (2567     ) & 0xff;
+    buf[7] = 0;
+    send_can_data(dev, 0x100, buf, sizeof buf);
+    buf[0] = (-1234 >> 8) & 0xff;
+    buf[1] = (-1234     ) & 0xff;
+    buf[2] = ( 3000 >> 8) & 0xff;
+    buf[3] = ( 3000     ) & 0xff;
+    buf[4] = (25678 >> 8) & 0xff;
+    buf[5] = (25678     ) & 0xff;
+    buf[6] = 0;
+    buf[7] = 0;
+    send_can_data(dev, 0x101, buf, sizeof buf);
+    buf[0] = (18789 >> 8) & 0xff;
+    buf[1] = (18789     ) & 0xff;
+    buf[2] = (18789 >> 8) & 0xff;
+    buf[3] = (18789     ) & 0xff;
+    buf[4] = (12345 >> 8) & 0xff;
+    buf[5] = (12345     ) & 0xff;
+    buf[6] = 0;
+    buf[7] = 0;
+    send_can_data(dev, 0x103, buf, sizeof buf);
+    buf[0] = (24567 >> 8) & 0xff;
+    buf[1] = (24567     ) & 0xff;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = (24456 >> 8) & 0xff;
+    buf[5] = (24456     ) & 0xff;
+    buf[6] = 1;
+    buf[7] = 0;
+    send_can_data(dev, 0x110, buf, sizeof buf);
+    buf[0] = (2569 >> 8) & 0xff;
+    buf[1] = (2569     ) & 0xff;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = (2568 >> 8) & 0xff;
+    buf[5] = (2568     ) & 0xff;
+    buf[6] = 1;
+    buf[7] = 0;
+    send_can_data(dev, 0x111, buf, sizeof buf);
+    buf[0] = (-617 >> 8) & 0xff;
+    buf[1] = (-617     ) & 0xff;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = (-617  >> 8) & 0xff;
+    buf[5] = (-617      ) & 0xff;
+    buf[6] = 1;
+    buf[7] = 0;
+    send_can_data(dev, 0x112, buf, sizeof buf);
+    buf[0] = 0x12;
+    buf[1] = 0x34;
+    buf[2] = 1;
+    buf[3] = 2;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+    send_can_data(dev, 0x113, buf, sizeof buf);
+    buf[0] = (4076 >> 8) & 0xff;
+    buf[1] = (4076     ) & 0xff;
+    buf[2] = 1;
+    buf[3] = 0;
+    buf[4] = (4094 >> 8) & 0xff;
+    buf[5] = (4094     ) & 0xff;
+    buf[6] = 0;
+    buf[7] = 0;
+    send_can_data(dev, 0x120, buf, sizeof buf);
+    buf[0] = 0x78;
+    buf[1] = 0x9a;
+    buf[2] = 0xbc;
+    buf[3] = 0xde;
+    buf[4] = 0xf0;
+    buf[5] = 0x12;
+    buf[6] = 0;
+    buf[7] = 0;
+    send_can_data(dev, 0x130, buf, sizeof buf);
+}
+
 void send_uss(const device *dev)
 {
     static constexpr uint16_t data[5]{1000, 1001, 1002, 1003, 1004};
@@ -177,6 +263,7 @@ public:
             uint32_t dt_ms{k_cyc_to_ms_near32(now_cycle - prev_cycle)};
             if (dt_ms > 1'000) {
                 prev_cycle = now_cycle;
+                send_bmu(dev);
                 send_uss(dev);
                 send_acc(dev, acc_gyro_counter);
                 send_gyro(dev, acc_gyro_counter);
