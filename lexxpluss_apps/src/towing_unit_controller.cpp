@@ -45,13 +45,13 @@ public:
 
         const device *gpioj{device_get_binding("GPIOJ")};
         if (device_is_ready(gpioj)) {
-            gpio_pin_configure(gpioj, 1, GPIO_OUTPUT);  //Power ON Output SPRGPIO4
-            gpio_pin_configure(gpioj, 2, GPIO_INPUT | GPIO_PULL_UP | GPIO_ACTIVE_HIGH);   //Switch 1 SPRGPIO5
-            gpio_pin_configure(gpioj, 3, GPIO_INPUT | GPIO_PULL_UP | GPIO_ACTIVE_HIGH);   //Switch 2 SPRGPIO6
-            gpio_pin_configure(gpioj, 4, GPIO_INPUT | GPIO_PULL_UP | GPIO_ACTIVE_HIGH);   //PowerGood +12V SPRGPIO7
+            gpio_pin_configure(gpioj, 1, GPIO_OUTPUT);                                      // Power ON Output SPRGPIO4
+            gpio_pin_configure(gpioj, 2, GPIO_INPUT | GPIO_PULL_UP | GPIO_ACTIVE_HIGH);     // Switch 1 SPRGPIO5
+            gpio_pin_configure(gpioj, 3, GPIO_INPUT | GPIO_PULL_UP | GPIO_ACTIVE_HIGH);     // Switch 2 SPRGPIO6
+            gpio_pin_configure(gpioj, 4, GPIO_INPUT | GPIO_PULL_UP | GPIO_ACTIVE_HIGH);     // PowerGood +12V SPRGPIO7
         }
 
-        gpio_pin_set(gpioj, 1, 0);  //Set 12V Power ON(active low)
+        gpio_pin_set(gpioj, 1, 0);  // Set 12V Power ON(active low)
         is_towing_unit_power_on = V12_ON;
 
         // Debug LED5 is ON
@@ -68,53 +68,53 @@ public:
         LOG_INF("Towing Unit run() started");
         
         while (true) {
-            //Get Switch & Power Good Status
+            // Get Switch & Power Good Status
             const device *gpioj{device_get_binding("GPIOJ")};
 
             if (device_is_ready(gpioj)) {
                 if (is_towing_unit_power_on == V12_ON) {
-                    gpio_pin_set(gpioj, 1, 0);  //Set 12V Power ON(active low)
+                    gpio_pin_set(gpioj, 1, 0);  // Set 12V Power ON(active low)
                 } else {
-                    gpio_pin_set(gpioj, 1, 1);  //Set 12V Power OFF
+                    gpio_pin_set(gpioj, 1, 1);  // Set 12V Power OFF
                 }
             }
             if (device_is_ready(gpioj)) {
-                /* SW_L */ 
+                // SW_L
                 if(gpio_pin_get(gpioj, 2) == 0){
-                    is_towing_unit_sw_l_loading = LOADED;  //Loading
+                    is_towing_unit_sw_l_loading = LOADED;   // Loading
                 }else{
-                    is_towing_unit_sw_l_loading = UNLOADED; //Not Loading
+                    is_towing_unit_sw_l_loading = UNLOADED; // Not Loading
                 }
             }
             if (device_is_ready(gpioj)) {
-                /* SW_R */ 
+                // SW_R
                 if(gpio_pin_get(gpioj, 3) == 0){
-                    is_towing_unit_sw_r_loading = LOADED;  //Loading
+                    is_towing_unit_sw_r_loading = LOADED;   // Loading
                 }else{
-                    is_towing_unit_sw_r_loading = UNLOADED; //Not Loading
+                    is_towing_unit_sw_r_loading = UNLOADED; // Not Loading
                 }
             }
             if (device_is_ready(gpioj)) {
-                /* Power Good */ 
+                // Power Good
                 if(gpio_pin_get(gpioj, 4) == 0){
-                    is_towing_unit_power_good = V12_OK;  //+12V is on
+                    is_towing_unit_power_good = V12_OK; // +12V is on
                 }else{
-                    is_towing_unit_power_good = V12_NG; //+12V is off
+                    is_towing_unit_power_good = V12_NG; // +12V is off
                 } 
             }
 
-            //Get Power ON Output Status
+            // Get Power ON Output Status
             if (k_msgq_get(&msgq_towing_unit_power_on, &message_towing_status_rx, K_NO_WAIT) == 0) {
                 is_towing_unit_power_on = message_towing_status_rx.power_on;
             } 
 
-            /* Set Status to PUB message */
+            // Set Status to PUB message
             message_towing_status_tx.left_sw = is_towing_unit_sw_l_loading;
             message_towing_status_tx.right_sw = is_towing_unit_sw_r_loading;
             message_towing_status_tx.power_good = is_towing_unit_power_good;
             message_towing_status_tx.power_on = is_towing_unit_power_on;
 
-            /* Send PUB message */
+            // Send PUB message
             while (k_msgq_put(&msgq_towing_unit_status, &message_towing_status_tx, K_NO_WAIT) != 0) {
                 k_msgq_purge(&msgq_towing_unit_status);
             }

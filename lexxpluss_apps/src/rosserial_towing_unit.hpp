@@ -57,7 +57,6 @@ public:
         msg_pub.data[3] = V12_ON;
     }
     void poll() {
-        //ユニットの値をPUB
         towing_unit_controller::msg_towing_unit_status message_pub;
         while (k_msgq_get(&towing_unit_controller::msgq_towing_unit_status, &message_pub, K_NO_WAIT) == 0) {
             msg_pub.data[0] = message_pub.left_sw;
@@ -71,7 +70,7 @@ private:
     void callback_towing_unit_power_on(const std_msgs::UInt8 &msg) {
         towing_unit_controller::msg_towing_unit_status message_sub;
         message_sub.power_on = msg.data;
-        //SUBで値を受け取る
+        
         while (k_msgq_put(&towing_unit_controller::msgq_towing_unit_power_on, &message_sub, K_NO_WAIT) != 0){
             k_msgq_purge(&towing_unit_controller::msgq_towing_unit_power_on);
         }
