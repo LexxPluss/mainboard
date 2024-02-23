@@ -69,15 +69,33 @@ public:
         k_msgq_init(&msgq_board, msgq_board_buffer, sizeof (msg_board), 8);
         k_msgq_init(&msgq_control, msgq_control_buffer, sizeof (msg_control), 8);
         dev = device_get_binding("can@40006800");
-        if (!device_is_ready(dev))
+        if (!device_is_ready(dev)){
+            LOG_INF("CAN1 not ready at init");
             return -1;
+        }
         can_set_bitrate(dev, 500000);
         can_set_mode(dev, CAN_MODE_NORMAL);
+
+        dev2 = device_get_binding("can@40006400");
+        if (!device_is_ready(dev2)){
+            LOG_INF("CAN1 not ready at init");
+            return -1;
+        }
+        can_set_bitrate(dev2, 500000);
+        can_set_mode(dev2, CAN_MODE_NORMAL);
+        LOG_INF("CAN1 CAN2 ready at init");
         return 0;
     }
     void run() {
-        if (!device_is_ready(dev))
+        if (!device_is_ready(dev)){
+            LOG_INF("CAN2 not ready at run");
             return;
+        }
+        if (!device_is_ready(dev2)){
+            LOG_INF("CAN1 not ready at run");
+            return;
+        }
+        LOG_INF("CAN1 CAN2 ready at init");
         const device *gpiog{device_get_binding("gpio@40021800")};
         if (device_is_ready(gpiog))
             gpio_pin_configure(gpiog, 6, GPIO_OUTPUT_LOW | GPIO_ACTIVE_HIGH);
@@ -370,6 +388,7 @@ private:
     log_printer log;
     uint32_t prev_cycle_ros{0}, prev_cycle_send{0};
     const device *dev{nullptr};
+    const device *dev2{nullptr};
     char version_powerboard[32]{""};
     bool heartbeat_timeout{true}, enable_lockdown{true};
     static constexpr char version[]{"2.6.1"};
