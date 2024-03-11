@@ -385,7 +385,7 @@ private:
     
     // Version Definition
     // [Hardware Change].[function added or interface change].[bug fix, reset to 0 when the compatibility is lost]
-    static constexpr char version[]{"2.8.0"}; 
+    static constexpr char version[]{"2.8.0a"}; 
 } impl;
 
 int bmu_info(const shell *shell, size_t argc, char **argv)
