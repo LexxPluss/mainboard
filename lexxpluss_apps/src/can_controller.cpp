@@ -137,12 +137,18 @@ public:
 	return board2ros.bumper_switch[0] ||
 	       board2ros.bumper_switch[1];
     }
+    // bool is_emergency() const {
+    //     return board2ros.emergency_switch[0] ||
+    //            board2ros.emergency_switch[1] ||
+    //            board2ros.bumper_switch[0] ||
+    //            board2ros.bumper_switch[1] ||
+    //            ros2board.emergency_stop;
+    // }
     bool is_emergency() const {
         return board2ros.emergency_switch[0] ||
                board2ros.emergency_switch[1] ||
                board2ros.bumper_switch[0] ||
-               board2ros.bumper_switch[1] ||
-               ros2board.emergency_stop;
+               board2ros.bumper_switch[1];
     }
     void bmu_info(const shell *shell) const {
         shell_print(shell,
@@ -173,8 +179,11 @@ public:
         ros2board.emergency_stop = false;
         heartbeat_timeout = false;
     }
+    // void brd_lockdown(bool enable) {
+    //     enable_lockdown = enable;
+    // }
     void brd_lockdown(bool enable) {
-        enable_lockdown = enable;
+        enable_lockdown = false;
     }
     void brd_info(const shell *shell) const {
         shell_print(shell,
@@ -381,11 +390,12 @@ private:
     uint32_t prev_cycle_ros{0}, prev_cycle_send{0};
     const device *dev{nullptr};
     char version_powerboard[32]{""};
-    bool heartbeat_timeout{true}, enable_lockdown{true};
+    // bool heartbeat_timeout{true}, enable_lockdown{true};
+    bool heartbeat_timeout{true}, enable_lockdown{false};
     
     // Version Definition
     // [Hardware Change].[function added or interface change].[bug fix, reset to 0 when the compatibility is lost]
-    static constexpr char version[]{"2.8.0"}; 
+    static constexpr char version[]{"100.0.0"}; 
 } impl;
 
 int bmu_info(const shell *shell, size_t argc, char **argv)
