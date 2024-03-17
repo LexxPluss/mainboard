@@ -41,6 +41,7 @@ LOG_MODULE_REGISTER(can);
 char __aligned(4) msgq_bmu_buffer[8 * sizeof (msg_bmu)];
 char __aligned(4) msgq_board_buffer[8 * sizeof (msg_board)];
 char __aligned(4) msgq_control_buffer[8 * sizeof (msg_control)];
+char __aligned(4) msgq_mbd_config_buffer[8 * sizeof (msg_mbd_config)];
 
 CAN_DEFINE_MSGQ(msgq_can_bmu, 16);
 CAN_DEFINE_MSGQ(msgq_can_board, 4);
@@ -68,6 +69,7 @@ public:
         k_msgq_init(&msgq_bmu, msgq_bmu_buffer, sizeof (msg_bmu), 8);
         k_msgq_init(&msgq_board, msgq_board_buffer, sizeof (msg_board), 8);
         k_msgq_init(&msgq_control, msgq_control_buffer, sizeof (msg_control), 8);
+        k_msgq_init(&msgq_mbd_config, msgq_mbd_config_buffer, sizeof (msg_mbd_config), 8);
         dev = device_get_binding("CAN_2");
         if (!device_is_ready(dev))
             return -1;
@@ -103,6 +105,10 @@ public:
             if (k_msgq_get(&msgq_control, &ros2board, K_NO_WAIT) == 0) {
                 prev_cycle_ros = k_cycle_get_32();
                 handled = true;
+            }
+            msg_mbd_config mbd_config;
+            if (k_msgq_get(&msgq_mbd_config, &mbd_config, K_NO_WAIT) == 0) {
+                delay_time_ms = mbd_config.delay_time_ms;
             }
             interlock_controller::msg_can_interlock message;
             if (k_msgq_get(&interlock_controller::msgq_can_interlock, &message, K_NO_WAIT) == 0) {
@@ -362,14 +368,16 @@ private:
             .id{0x201},
             .rtr{CAN_DATAFRAME},
             .id_type{CAN_STANDARD_IDENTIFIER},
-            .dlc{6},
+            .dlc{8},
             .data{
                 ros2board.emergency_stop,
                 ros2board.power_off,
                 enable_lockdown && heartbeat_timeout,
                 main_overheat,
                 actuator_overheat,
-                ros2board.wheel_power_off
+                ros2board.wheel_power_off,
+                delay_time_ms,
+                delay_time_ms >> 8
             }
         };
         can_send(dev, &frame, K_MSEC(100), nullptr, nullptr);
@@ -382,10 +390,11 @@ private:
     const device *dev{nullptr};
     char version_powerboard[32]{""};
     bool heartbeat_timeout{true}, enable_lockdown{true};
-    
+    uint16_t delay_time_ms{100};
+
     // Version Definition
     // [Hardware Change].[function added or interface change].[bug fix, reset to 0 when the compatibility is lost]
-    static constexpr char version[]{"2.8.0"}; 
+    static constexpr char version[]{"2.9.0"};
 } impl;
 
 int bmu_info(const shell *shell, size_t argc, char **argv)
@@ -462,7 +471,7 @@ bool is_emergency()
 }
 
 k_thread thread;
-k_msgq msgq_bmu, msgq_board, msgq_control;
+k_msgq msgq_bmu, msgq_board, msgq_control, msgq_mbd_config;
 
 }
 

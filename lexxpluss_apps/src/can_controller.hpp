@@ -61,6 +61,10 @@ struct msg_control {
     bool emergency_stop, power_off, wheel_power_off;
 } __attribute__((aligned(4)));
 
+struct msg_mbd_config {
+    uint16_t delay_time_ms;
+} __attribute__((aligned(4)));
+
 void init();
 void run(void *p1, void *p2, void *p3);
 uint32_t get_rsoc();

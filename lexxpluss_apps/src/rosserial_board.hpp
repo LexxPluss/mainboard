@@ -54,6 +54,7 @@ public:
         nh.subscribe(sub_poweroff);
         nh.subscribe(sub_lexxhard);
         nh.subscribe(sub_messenger);
+        nh.subscribe(sub_delay_time_ms);
         msg_fan.data = msg_fan_data;
         msg_fan.data_length = sizeof msg_fan_data / sizeof msg_fan_data[0];
         msg_bumper.data = msg_bumper_data;
@@ -139,6 +140,11 @@ private:
         while (k_msgq_put(&can_controller::msgq_control, &ros2board, K_NO_WAIT) != 0)
             k_msgq_purge(&can_controller::msgq_control);
     }
+    void callback_delay_time_ms(const std_msgs::UInt16 &req) {
+        msg_mbd_config.delay_time_ms = req.data;
+        while (k_msgq_put(&can_controller::msgq_mbd_config, &msg_mbd_config, K_NO_WAIT) != 0)
+            k_msgq_purge(&can_controller::msgq_mbd_config);
+    }
     std_msgs::UInt8MultiArray msg_fan;
     std_msgs::ByteMultiArray msg_bumper;
     std_msgs::Bool msg_emergency;
@@ -147,6 +153,7 @@ private:
     std_msgs::UInt8 msg_charge_delay;
     std_msgs::Float32 msg_charge_voltage;
     can_controller::msg_control ros2board{0};
+    can_controller::msg_mbd_config{0};
     uint8_t msg_fan_data[1];
     int8_t msg_bumper_data[2];
     ros::Publisher pub_fan{"/sensor_set/fan", &msg_fan};
@@ -168,6 +175,9 @@ private:
     };
     ros::Subscriber<std_msgs::Bool, ros_board> sub_messenger{
         "/lexxhard/mainboard_messenger_heartbeat", &ros_board::callback_messenger, this
+    };
+    ros::Subscriber<std_msgs::UInt16, ros_board> sub_delay_time_ms{
+        "/control/delay_time_ms", &ros_board::callback_delay_time_ms, this
     };
 };
 
