@@ -33,6 +33,7 @@
 #include "std_msgs/String.h"
 #include "std_msgs/UInt8MultiArray.h"
 #include "std_msgs/UInt8.h"
+#include "std_msgs/UInt16.h"
 #include "std_msgs/Float32.h"
 #include "lexxauto_msgs/BoardTemperatures.h"
 #include "can_controller.hpp"
@@ -141,8 +142,8 @@ private:
             k_msgq_purge(&can_controller::msgq_control);
     }
     void callback_delay_time_ms(const std_msgs::UInt16 &req) {
-        msg_mbd_config.delay_time_ms = req.data;
-        while (k_msgq_put(&can_controller::msgq_mbd_config, &msg_mbd_config, K_NO_WAIT) != 0)
+        mbd_config.delay_time_ms = req.data;
+        while (k_msgq_put(&can_controller::msgq_mbd_config, &mbd_config, K_NO_WAIT) != 0)
             k_msgq_purge(&can_controller::msgq_mbd_config);
     }
     std_msgs::UInt8MultiArray msg_fan;
@@ -153,7 +154,7 @@ private:
     std_msgs::UInt8 msg_charge_delay;
     std_msgs::Float32 msg_charge_voltage;
     can_controller::msg_control ros2board{0};
-    can_controller::msg_mbd_config{0};
+    can_controller::msg_mbd_config mbd_config{0};
     uint8_t msg_fan_data[1];
     int8_t msg_bumper_data[2];
     ros::Publisher pub_fan{"/sensor_set/fan", &msg_fan};

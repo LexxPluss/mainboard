@@ -72,7 +72,7 @@ bool get_emergency_switch();
 bool get_bumper_switch();
 bool is_emergency();
 extern k_thread thread;
-extern k_msgq msgq_bmu, msgq_board, msgq_control;
+extern k_msgq msgq_bmu, msgq_board, msgq_control, msgq_mbd_config;
 
 }
 

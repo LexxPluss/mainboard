@@ -376,8 +376,8 @@ private:
                 main_overheat,
                 actuator_overheat,
                 ros2board.wheel_power_off,
-                delay_time_ms,
-                delay_time_ms >> 8
+                static_cast<uint8_t>(delay_time_ms & 0xFF),
+                static_cast<uint8_t>((delay_time_ms >> 8) & 0xFF)
             }
         };
         can_send(dev, &frame, K_MSEC(100), nullptr, nullptr);
