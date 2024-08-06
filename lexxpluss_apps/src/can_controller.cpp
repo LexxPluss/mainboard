@@ -361,7 +361,7 @@ private:
             .data{
                 ros2board.emergency_stop,
                 ros2board.power_off,
-                heartbeat_timeout,
+                !get_emergency_switch() && heartbeat_timeout,
                 main_overheat,
                 actuator_overheat,
                 ros2board.wheel_power_off
