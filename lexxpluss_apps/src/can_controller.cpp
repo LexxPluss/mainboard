@@ -377,10 +377,10 @@ private:
     const device *dev{nullptr};
     char version_powerboard[32]{""};
     bool heartbeat_timeout{true};
-    
+
     // Version Definition
     // [Hardware Change].[function added or interface change].[bug fix, reset to 0 when the compatibility is lost]
-    static constexpr char version[]{"2.10.0"};
+    static constexpr char version[]{"2.10.1"};
 } impl;
 
 int bmu_info(const shell *shell, size_t argc, char **argv)
