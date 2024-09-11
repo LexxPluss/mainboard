@@ -119,7 +119,7 @@ public:
                 k_msgq_purge(&msgq_towing_unit_status);
             }
 
-            k_msleep(20);  // Changed from 200 to 20 by https://lexxpluss.atlassian.net/browse/YMZN-6
+            k_msleep(20);
         }
     }
     void cmd_v12_on(const shell *shell) {
