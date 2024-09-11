@@ -70,6 +70,7 @@ public:
             publish_power(message);
             publish_charge_delay(message);
             publish_charge_voltage(message);
+            publish_emergency_stop(message);
         }
     }
 private:
@@ -119,6 +120,10 @@ private:
         msg_charge_voltage.data = message.charge_connector_voltage;
         pub_charge_voltage.publish(&msg_charge_voltage);
     }
+    void publish_emergency_stop(const can_controller::msg_board &message) {
+        msg_emergency_stop.data = message.emergency_stop;
+        pub_emergency_stop.publish(&msg_emergency_stop);
+    }
     void callback_emergency(const std_msgs::Bool &req) {
         ros2board.emergency_stop = req.data;
         while (k_msgq_put(&can_controller::msgq_control, &ros2board, K_NO_WAIT) != 0)
@@ -146,6 +151,7 @@ private:
     lexxauto_msgs::BoardTemperatures msg_temperature;
     std_msgs::UInt8 msg_charge_delay;
     std_msgs::Float32 msg_charge_voltage;
+    std_msgs::Bool msg_emergency_stop;
     can_controller::msg_control ros2board{0};
     uint8_t msg_fan_data[1];
     int8_t msg_bumper_data[2];
@@ -157,6 +163,7 @@ private:
     ros::Publisher pub_power{"/body_control/power_state", &msg_power};
     ros::Publisher pub_charge_delay{"/body_control/charge_heartbeat_delay", &msg_charge_delay};
     ros::Publisher pub_charge_voltage{"/body_control/charge_connector_voltage", &msg_charge_voltage};
+    ros::Publisher pub_emergency_stop{"/body_control/emergency_stop", &msg_emergency_stop};
     ros::Subscriber<std_msgs::Bool, ros_board> sub_emergency{
         "/control/request_emergency_stop", &ros_board::callback_emergency, this
     };
