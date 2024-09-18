@@ -37,18 +37,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: setup
-        id: setup
-        run: |
-          set -e
-          make IN_HOST=1 setup
       - name: build
         id: build
         run: |
           set -e
-          make IN_HOST=1 firmware_initial
-          make IN_HOST=1 clean
-          make IN_HOST=1 firmware_tug_initial
+          cp -a /home/user/.cmake $HOME
+          ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb make IN_HOST=1 setup
+          ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb make IN_HOST=1 firmware_initial
+          ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb make IN_HOST=1 clean
+          ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb make IN_HOST=1 firmware_tug_initial
       - name: release
         id: create_release
         uses: actions/create-release@v1

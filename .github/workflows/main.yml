@@ -43,9 +43,10 @@ jobs:
         id: build
         run: |
           set -e
-          make IN_HOST=1 setup
-          make IN_HOST=1 bootloader
-          make IN_HOST=1 firmware
+          cp -a /home/user/.cmake $HOME
+          ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb make IN_HOST=1 setup
+          ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb make IN_HOST=1 bootloader
+          ZEPHYR_TOOLCHAIN_VARIANT=gnuarmemb make IN_HOST=1 firmware
       - name: Notification
         uses: act10ns/slack@v1
         with:
