@@ -42,12 +42,13 @@
 #  define VERSION v2.0.0-dev  // This version must not be used for production. Only for local build.
 #endif  // VERSION
 
-#ifdef ENABLE_TUG
+#if defined(ENABLE_TUG)
 #  define VERSION_STR STR(VERSION) "-tug"
+#elif defined(ENABLE_INTERLOCK)
+#  define VERSION_STR STR(VERSION) "-interlock"
 #else
 #  define VERSION_STR STR(VERSION)
-#endif  // ENABLE_TUG
-
+#endif  // ENABLE_TUG or ENABLE_INTERLOCK
 
 namespace lexxhard::can_controller {
 

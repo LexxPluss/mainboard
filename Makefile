@@ -25,7 +25,13 @@ VERSION:=$(shell git describe --tags HEAD)
 RUNNER:=$(if $(IN_HOST), $(), docker compose run --rm zephyrbuilder)
 
 .PHONY: all
-all: firmware_initial firmware_tug_initial firmware_interlock_initial
+all: 
+	$(MAKE) clean
+	$(MAKE) firmware_initial
+	$(MAKE) clean
+	$(MAKE) firmware_tug_initial
+	$(MAKE) clean
+	$(MAKE) firmware_interlock_initial
 
 .PHONY: clean
 clean:
@@ -69,7 +75,7 @@ firmware_tug:
 
 .PHONY: firmware_interlock
 firmware_interlock:
-	$(RUNNER) bash -c "west zephyr-export && west build -b lexxpluss_mb02 lexxpluss_apps -- -DVERSION=$(VERSION) -DENABLE_TUG=1"
+	$(RUNNER) bash -c "west zephyr-export && west build -b lexxpluss_mb02 lexxpluss_apps -- -DVERSION=$(VERSION) -DENABLE_INTERLOCK=1"
 	mv build/zephyr/zephyr.signed.bin out/zephyr_interlock.signed.bin
 	mv build/zephyr/zephyr.signed.confirmed.bin out/zephyr_interlock.signed.confirmed.bin
 
