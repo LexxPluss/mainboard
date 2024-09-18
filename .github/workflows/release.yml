@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: zephyrprojectrtos/zephyr-build:v0.21.0
+      options: --user root
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
@@ -44,6 +45,7 @@ jobs:
       - name: build
         id: build
         run: |
+          set -e
           make IN_HOST=1 firmware_initial
           make IN_HOST=1 clean
           make IN_HOST=1 firmware_tug_initial
