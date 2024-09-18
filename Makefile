@@ -25,7 +25,7 @@ VERSION:=$(shell git describe --tags HEAD)
 RUNNER:=$(if $(IN_HOST), $(), docker compose run --rm zephyrbuilder)
 
 .PHONY: all
-all: bootloader firmware_initial
+all: firmware_initial firmware_tug_initial firmware_interlock_initial
 
 .PHONY: clean
 clean:
@@ -50,62 +50,49 @@ setup:
 update:
 	$(RUNNER) west update
 
-out/zephyr.bin:
+.PHONY: bootloader
+bootloader:
 	$(RUNNER) bash -c "west zephyr-export && west build -b lexxpluss_mb02 bootloader/mcuboot/boot/zephyr -d build-mcuboot"
 	mv build-mcuboot/zephyr/zephyr.bin out/zephyr.bin
 
-out/zephyr.signed.bin out/zephyr.signed.confirmed.bin:
+.PHONY: firmware
+firmware: 
 	$(RUNNER) bash -c "west zephyr-export && west build -b lexxpluss_mb02 lexxpluss_apps -- -DVERSION=$(VERSION)"
 	mv build/zephyr/zephyr.signed.bin out/zephyr.signed.bin
 	mv build/zephyr/zephyr.signed.confirmed.bin out/zephyr.signed.confirmed.bin
 
-out/zephyr_tug.signed.bin out/zephyr_tug.signed.confirmed.bin:
+.PHONY: firmware_tug
+firmware_tug: 
 	$(RUNNER) bash -c "west zephyr-export && west build -b lexxpluss_mb02 lexxpluss_apps -- -DVERSION=$(VERSION) -DENABLE_TUG=1"
 	mv build/zephyr/zephyr.signed.bin out/zephyr_tug.signed.bin
 	mv build/zephyr/zephyr.signed.confirmed.bin out/zephyr_tug.signed.confirmed.bin
 
-out/zephyr_interlock.signed.bin out/zephyr_interlock.signed.confirmed.bin:
+.PHONY: firmware_interlock
+firmware_interlock:
 	$(RUNNER) bash -c "west zephyr-export && west build -b lexxpluss_mb02 lexxpluss_apps -- -DVERSION=$(VERSION) -DENABLE_TUG=1"
 	mv build/zephyr/zephyr.signed.bin out/zephyr_interlock.signed.bin
 	mv build/zephyr/zephyr.signed.confirmed.bin out/zephyr_interlock.signed.confirmed.bin
 
-out/bl_with_ff.bin: out/zephyr.bin
+.PHONY: firmware_initial
+firmware_initial: 
+	$(MAKE) bootloader
+	$(MAKE) firmware
 	dd if=/dev/zero bs=1k count=256 | tr "\000" "\377" > out/bl_with_ff.bin
 	dd if=out/zephyr.bin of=out/bl_with_ff.bin conv=notrunc
-
-out/firmware.bin: out/bl_with_ff.bin out/zephyr.signed.bin
 	cat out/bl_with_ff.bin out/zephyr.signed.bin > out/firmware.bin
 
-out/firmware_tug.bin: out/bl_with_ff.bin out/zephyr_tug.signed.bin
+.PHONY: firmware_tug_initial
+firmware_tug_initial: 
+	$(MAKE) bootloader
+	$(MAKE) firmware_tug
+	dd if=/dev/zero bs=1k count=256 | tr "\000" "\377" > out/bl_with_ff.bin
+	dd if=out/zephyr.bin of=out/bl_with_ff.bin conv=notrunc
 	cat out/bl_with_ff.bin out/zephyr_tug.signed.bin > out/firmware_tug.bin
 
-out/firmware_interlock.bin: out/bl_with_ff.bin out/zephyr_interlock.signed.bin
-	cat out/bl_with_ff.bin out/zephyr_interlock.signed.bin > out/firmware_interlock.bin
-
-.PHONY: bootloader
-bootloader: out/zephyr.bin
-	@
-
-.PHONY: firmware
-firmware: out/zephyr.signed.bin out/zephyr.signed.confirmed.bin
-	@
-
-.PHONY: firmware_tug
-firmware_tug: out/zephyr_tug.signed.bin  out/zephyr_tug.signed.confirmed.bin
-	@
-
-.PHONY: firmware_interlock
-firmware_interlock: out/zephyr_interlock.signed.bin  out/zephyr_interlock.signed.confirmed.bin
-	@
-
-.PHONY: firmware_initial
-firmware_initial: out/firmware.bin
-	@
-
-.PHONY: firmware_tug_initial
-firmware_tug_initial: out/firmware_tug.bin
-	@
-
 .PHONY: firmware_interlock_initial
-firmware_interlock_initial: out/firmware_interlock.bin
-	@
+firmware_interlock_initial:
+	$(MAKE) bootloader
+	$(MAKE) firmware_interlock
+	dd if=/dev/zero bs=1k count=256 | tr "\000" "\377" > out/bl_with_ff.bin
+	dd if=out/zephyr.bin of=out/bl_with_ff.bin conv=notrunc
+	cat out/bl_with_ff.bin out/zephyr_interlock.signed.bin > out/firmware_interlock.bin
