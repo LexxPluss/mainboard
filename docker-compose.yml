@@ -1,4 +1,4 @@
-# Copyright (c) 2022, LexxPluss Inc.
+# Copyright (c) 2024, LexxPluss Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -21,24 +21,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 3.13.1)
-
-find_package(Zephyr)
-project(lexxpluss_apps)
-
-FILE(GLOB app_sources src/*.cpp)
-FILE(GLOB ros_sources ../ros_msgs/*.cpp)
-target_sources(app PRIVATE ${app_sources} ${ros_sources})
-target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ros_msgs)
-
-if(ENABLE_INTERLOCK)
-    add_definitions(-DENABLE_INTERLOCK)
-endif()
-
-if(ENABLE_TUG)
-    add_definitions(-DENABLE_TUG)
-endif()
-
-if(VERSION)
-    add_definitions(-DVERSION=${VERSION})
-endif()
+version: '3'
+services:
+  zephyrbuilder:
+    image: zephyrprojectrtos/zephyr-build:v0.21.0
+    volumes:
+      - .:/workdir
+    environment:
+      ZEPHYR_TOOLCHAIN_VARIANT: "gnuarmemb"

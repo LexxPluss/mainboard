@@ -142,7 +142,11 @@ public:
         switch (pos) {
         case POS::LEFT:
             result = enc.init(TIM3);
+#ifdef ENABLE_TUG
+            mm_per_pulse = 0.0033;
+#else
             mm_per_pulse = 50.0f / 1054.0f;
+#endif  // ENABLE_TUG
             break;
         case POS::CENTER:
             result = enc.init(TIM4);
@@ -150,7 +154,11 @@ public:
             break;
         case POS::RIGHT:
             result = enc.init(TIM1);
+#ifdef ENABLE_TUG
+            mm_per_pulse = 0.0033;
+#else
             mm_per_pulse = 50.0f / 1054.0f;
+#endif  // ENABLE_TUG
             break;
         }
         reset_pulse();
