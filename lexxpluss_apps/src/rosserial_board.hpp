@@ -50,6 +50,7 @@ public:
         nh.advertise(pub_power);
         nh.advertise(pub_charge_delay);
         nh.advertise(pub_charge_voltage);
+        nh.advertise(pub_emergency_stop);
         nh.subscribe(sub_emergency);
         nh.subscribe(sub_poweroff);
         nh.subscribe(sub_lexxhard);
