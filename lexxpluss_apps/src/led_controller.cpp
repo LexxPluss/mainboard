@@ -145,8 +145,32 @@ private:
         case msg::RGB_BLINK:       fill_blink(led_rgb{.r{message.rgb[0]}, .g{message.rgb[1]}, .b{message.rgb[2]}}, message.cpm); break;
         case msg::RGB_BREATH:      fill_fade(led_rgb{.r{message.rgb[0]}, .g{message.rgb[1]}, .b{message.rgb[2]}}, message.cpm);break;
         }
+        clamp();
         update();
         ++counter;
+    }
+    led_rgb clamp_rgb(led_rgb rgb) const {
+        auto const max_channel_value{std::max({rgb.r, rgb.g, rgb.b})};
+        auto const acc_channel_value(static_cast<float>(rgb.r) + static_cast<float>(rgb.g) + static_cast<float>(rgb.b));
+
+        auto const channel_wise_ratio{static_cast<float>(clamp_threshold) / max_channel_value};
+        auto const agg_ratio{3 * static_cast<float>(clamp_threshold) / acc_channel_value};
+        auto const clamp_ratio = std::min(channel_wise_ratio, agg_ratio);
+        if (1.0f <= clamp_ratio) {
+            return rgb;
+        }
+
+        return led_rgb{
+            .r=static_cast<uint8_t>(clamp_ratio * rgb.r + 0.5f),
+            .g=static_cast<uint8_t>(clamp_ratio * rgb.g + 0.5f),
+            .b=static_cast<uint8_t>(clamp_ratio * rgb.b + 0.5f)
+        };
+    }
+    void clamp() {
+        for (uint32_t i{0}; i < PIXELS; ++i) {
+            pixeldata[LED_LEFT][i] = clamp_rgb(pixeldata[LED_LEFT][i]);
+            pixeldata[LED_RIGHT][i] = clamp_rgb(pixeldata[LED_RIGHT][i]);
+        }
     }
     void update() {
         std::copy(&pixeldata[LED_LEFT][0],  &pixeldata[LED_LEFT][PIXELS_BACK],  &pixeldata_back[LED_LEFT][0]);
@@ -337,6 +361,7 @@ private:
     const device *dev[4]{nullptr, nullptr, nullptr, nullptr};
     led_rgb pixeldata[2][PIXELS], pixeldata_back[2][PIXELS_BACK];
     uint32_t counter{0};
+    uint8_t clamp_threshold{0xff};
     static const led_rgb emergency_stop, amr_mode, agv_mode, mission_pause, path_blocked, manual_drive;
     static const led_rgb dock_mode, waiting_for_job, orange, sequence, move_actuator, lockdown, black;
 } impl;
