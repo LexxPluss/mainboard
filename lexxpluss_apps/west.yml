@@ -32,7 +32,7 @@ manifest:
       import: true
     - name: ros_msgs
       remote: lexxpluss
-      revision: main
+      revision: b235d033377faf3f4c1bea67f714e69878afaac9
       path: ros_msgs
   self:
     path: lexxpluss_apps
