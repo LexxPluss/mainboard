@@ -26,7 +26,17 @@ cmake_minimum_required(VERSION 3.13.1)
 find_package(Zephyr)
 project(lexxpluss_apps)
 
-FILE(GLOB app_sources src/*.cpp)
+FILE(GLOB app_sources 
+     src/can_controller.cpp
+     src/firmware_updater.cpp
+     src/imu_controller.cpp
+     src/log_controller.cpp
+     src/main.cpp
+     src/misc_controller.cpp
+     src/pgv_controller.cpp
+     src/rosserial.cpp
+     src/sdlog_controller.cpp
+)
 FILE(GLOB ros_sources ../ros_msgs/*.cpp)
 target_sources(app PRIVATE ${app_sources} ${ros_sources})
 target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../ros_msgs)
