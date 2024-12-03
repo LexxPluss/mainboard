@@ -212,6 +212,11 @@ public:
                     board2ros.charge_connector_voltage, board2ros.charge_check_count, board2ros.charge_heartbeat_delay, board2ros.charge_temperature_error,
                     version, version_powerboard);
     }
+    void brd_v16off(const shell *shell, uint8_t count) {
+        v16_off_count = count;
+        shell_print(shell, "Set v16_off_count to %d\n" , v16_off_count);
+    }
+
 private:
     void setup_can_filter() const {
         static const zcan_filter filter_bmu{
@@ -321,8 +326,14 @@ private:
             for (auto i{0}; i < 3; ++i)
                 board2ros.actuator_board_temp[i] = misc_controller::get_actuator_board_temp(i);
             static constexpr uint8_t LOCKDOWN_STATE{7};
+            static constexpr uint8_t TEST_16V_STATE{9};
             if (prev_state != LOCKDOWN_STATE && board2ros.state == LOCKDOWN_STATE) {
                 led_controller::msg message{led_controller::msg::LOCKDOWN, 1000000000};
+                while (k_msgq_put(&led_controller::msgq, &message, K_NO_WAIT) != 0)
+                    k_msgq_purge(&led_controller::msgq);
+            }
+            if (prev_state != TEST_16V_STATE && board2ros.state == TEST_16V_STATE) {
+                led_controller::msg message{led_controller::msg::CHARGING, 1000000000};
                 while (k_msgq_put(&led_controller::msgq, &message, K_NO_WAIT) != 0)
                     k_msgq_purge(&led_controller::msgq);
             }
@@ -362,7 +373,7 @@ private:
             log.putc(data);
         }
     }
-    void send_message() const {
+    void send_message() {
         bool main_overheat{board2ros.main_board_temp > 75.0f};
         bool actuator_overheat{false};
         for (const auto &i: board2ros.actuator_board_temp) {
@@ -373,16 +384,18 @@ private:
             .id{0x201},
             .rtr{CAN_DATAFRAME},
             .id_type{CAN_STANDARD_IDENTIFIER},
-            .dlc{6},
+            .dlc{7},
             .data{
                 ros2board.emergency_stop,
                 ros2board.power_off,
                 !get_emergency_switch() && heartbeat_timeout,
                 main_overheat,
                 actuator_overheat,
-                ros2board.wheel_power_off
+                ros2board.wheel_power_off,
+                v16_off_count
             }
         };
+        v16_off_count = 0; // send v16_off_count once
         can_send(dev, &frame, K_MSEC(100), nullptr, nullptr);
     }
     msg_bmu bmu2ros{0};
@@ -393,6 +406,7 @@ private:
     const device *dev{nullptr};
     char version_powerboard[32]{""};
     bool heartbeat_timeout{true};
+    uint8_t v16_off_count{0};
 
     // Version Definition
     // [Hardware Change].[function added or interface change].[bug fix, reset to 0 when the compatibility is lost]
@@ -423,9 +437,22 @@ int brd_info(const shell *shell, size_t argc, char **argv)
     return 0;
 }
 
+int brd_v16off(const shell *shell, size_t argc, char **argv)
+{
+    if (argc != 2) {
+        shell_error(shell, "Usage: %s %s <off duration [cs]>\n", argv[-1], argv[0]);
+        return 1;
+    }
+
+    const uint8_t off_count = static_cast<uint8_t>(atoi(argv[1]));
+    impl.brd_v16off(shell, off_count);
+    return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_brd,
     SHELL_CMD(emgoff, NULL, "ROS emergency stop off", brd_emgoff),
     SHELL_CMD(info, NULL, "Board information", brd_info),
+    SHELL_CMD(v16off, NULL, "16V power supply off", brd_v16off),
     SHELL_SUBCMD_SET_END
 );
 SHELL_CMD_REGISTER(brd, &sub_brd, "Board commands", NULL);
